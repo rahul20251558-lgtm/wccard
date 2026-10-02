@@ -224,6 +224,29 @@ async function handle(req: Request): Promise<Response> {
   if (!db) return fail("Server setup adhoora hai: Vercel me SUPABASE_URL aur SUPABASE_SERVICE_ROLE_KEY set karein.", 500);
 
   try {
+           // ----- HEALTH CHECK (test ke baad hata dena) -----
+       if (route === "health") {
+         let keyType = "unknown";
+         if (SUPABASE_KEY.startsWith("sb_secret_")) keyType = "secret key (SAHI)";
+         else if (SUPABASE_KEY.startsWith("sb_publishable_")) keyType = "publishable key (GALAT)";
+         else if (SUPABASE_KEY.startsWith("eyJ")) {
+           try { keyType = "legacy key, role = " + JSON.parse(Buffer.from(SUPABASE_KEY.split(".")[1], "base64").toString()).role; }
+           catch { keyType = "legacy key (unreadable)"; }
+         }
+         const read = await db.from("wc_settings").select("key").limit(1);
+         const write = await db.from("wc_activity").insert({ by_user: "health-check", msg: "test" });
+         const bucket = await db.storage.getBucket(BUCKET);
+         return json({
+           supabaseUrl: SUPABASE_URL,
+           keyType,
+           keyLength: SUPABASE_KEY.length,
+           geminiKey: !!GEMINI_KEY,
+           authSecret: !!process.env.AUTH_SECRET,
+           readError: read.error?.message || "OK",
+           writeError: write.error?.message || "OK",
+           bucketError: bucket.error?.message || "OK",
+         });
+       }
     // ----- LOGIN (public) -----
     if (route === "login" && method === "POST") {
       const { name = "", password = "", remember = false } = await req.json();
