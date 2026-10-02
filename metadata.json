@@ -1,0 +1,8 @@
+{
+  "name": "AI Business Card Scanner & CRM",
+  "description": "A full-stack CRM with high-precision AI business card OCR scanning, real-time lead pipeline management, and Excel import/export.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
